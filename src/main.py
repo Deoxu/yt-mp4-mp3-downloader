@@ -67,45 +67,52 @@ class BaixarVideo:
             messagebox.showerror("Erro", f"Não foi possível obter informações do vídeo: {e}")
             return None
 
-class DownloaderApp:
+class BaixarVideo:
     def __init__(self, root):
         self.root = root
-        self.root.title("Youtube Downloader")
-        self.root.configure(bg="#f4f4f4")
+        self.root.title("Shimmer")
+        self.root.configure(bg="#1e1e1e")
 
         # Estilos globais
         label_font = ("Helvetica", 10)
         button_font = ("Helvetica", 10, "bold")
 
-        self.link_label = tk.Label(root, text="Link do vídeo:", font=label_font, bg="#f4f4f4")
+        self.link_label = tk.Label(root, text="Link do vídeo:", font=label_font, bg="#1e1e1e", fg="white")
         self.link_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
         self.link_entry = tk.Entry(root, width=50)
         self.link_entry.grid(row=0, column=1, padx=5, pady=5)
 
-        self.info_button = tk.Button(root, text="Info", font=button_font, command=self.show_info, bg="#009933", fg="white")
+        self.info_button = tk.Button(root, text="Info", font=button_font, command=self.show_info, bg="#007acc",
+                                     fg="white")
         self.info_button.grid(row=0, column=2, padx=5, pady=5)
 
-        self.dest_label = tk.Label(root, text="Destino:", font=label_font, bg="#f4f4f4")
+        self.dest_label = tk.Label(root, text="Destino:", font=label_font, bg="#1e1e1e", fg="white")
         self.dest_label.grid(row=1, column=0, padx=5, pady=5, sticky="w")
 
-        self.dest_button = tk.Button(root, text="Selecionar Pasta", font=button_font, command=self.select_destination, bg="#2196f3", fg="white")
+        self.dest_button = tk.Button(root, text="Selecionar Pasta", font=button_font, command=self.select_destination,
+                                     bg="#007acc", fg="white")
         self.dest_button.grid(row=1, column=1, padx=5, pady=5)
 
-        self.dest_path = tk.Label(root, text="Diretório atual", fg="#0d47a1", bg="#f4f4f4", font=("Helvetica", 9, "italic"))
+        self.dest_path = tk.Label(root, text="Diretório atual", fg="#0d47a1", bg="#1e1e1e",
+                                  font=("Helvetica", 9, "italic"))
         self.dest_path.grid(row=2, column=0, columnspan=2, padx=5, pady=5, sticky="w")
 
-        self.download_mp4_button = tk.Button(root, text="Baixar Vídeo (MP4)", font=button_font, command=self.download_mp4, bg="#ff5722", fg="white")
+        self.download_mp4_button = tk.Button(root, text="Baixar Vídeo (MP4)", font=button_font,
+                                             command=self.download_mp4, bg="#007acc", fg="white")
         self.download_mp4_button.grid(row=3, column=0, columnspan=3, pady=10)
 
-        self.download_mp3_button = tk.Button(root, text="Baixar Áudio (MP3)", font=button_font, command=self.download_mp3, bg="#ff9800", fg="white")
+        self.download_mp3_button = tk.Button(root, text="Baixar Áudio (MP3)", font=button_font,
+                                             command=self.download_mp3, bg="#007acc", fg="white")
         self.download_mp3_button.grid(row=4, column=0, columnspan=3, pady=10)
 
         # Frame para exibir informações do vídeo
-        self.info_frame = tk.Frame(root, bd=2, relief=tk.GROOVE, bg="#ffffff")
+        self.info_frame = tk.Frame(root, bd=2, relief=tk.GROOVE, bg="#1e1e1e")
         self.info_frame.grid(row=0, column=3, rowspan=5, padx=10, pady=5, sticky="n")
 
-        self.thumbnail_label = tk.Label(self.info_frame, text="Insira o link do vídeo e clique em info para exibir informações", wraplength=200, font=label_font, bg="#ffffff")
+        self.thumbnail_label = tk.Label(self.info_frame,
+                                        text="Insira o link do vídeo e clique em info para exibir informações",
+                                        wraplength=200, font=label_font, bg="#1e1e1e", fg="white")
         self.thumbnail_label.pack(pady=5)
 
         self.default_image = Image.open(BytesIO(requests.get(
@@ -113,7 +120,7 @@ class DownloaderApp:
         ).content)).resize((320, 180), Image.Resampling.LANCZOS)
         self.default_photo = ImageTk.PhotoImage(self.default_image)
 
-        self.thumbnail_image = tk.Label(self.info_frame, image=self.default_photo, bg="#ffffff")
+        self.thumbnail_image = tk.Label(self.info_frame, image=self.default_photo, bg="#1e1e1e")
         self.thumbnail_image.image = self.default_photo
         self.thumbnail_image.pack()
 
@@ -172,5 +179,5 @@ class DownloaderApp:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = DownloaderApp(root)
+    app = BaixarVideo(root)
     root.mainloop()
