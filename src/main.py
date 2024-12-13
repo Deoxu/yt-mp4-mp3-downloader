@@ -47,7 +47,7 @@ class BaixarVideo:
             with YoutubeDL(ydl_opts) as ydl:
                 ydl.download([self.link])
 
-            print("Áudio baixado com sucesso como MP3!")
+            print("Áudio baixado com sucesso!")
         except Exception as e:
             print(f"Ocorreu um erro ao baixar o áudio como MP3: {e}")
 
