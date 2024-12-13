@@ -72,4 +72,4 @@ while True:
     elif option == '2':
         downloader.download_mp3()
     else:
-        print("Opção inválida. Tente novamente.")
+        print("Opção inválida, Tente novamente.")
