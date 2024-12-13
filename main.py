@@ -52,7 +52,6 @@ class BaixarVideo:
         except Exception as e:
             print(f"Ocorreu um erro ao baixar o áudio como MP3: {e}")
 
-# Entrada do usuário
 link = input("Digite o link do vídeo que deseja baixar: \n>> ")
 print("Escolha o formato de download:")
 print("1. MP4 (vídeo)")
@@ -61,7 +60,6 @@ option = input("Digite '1' para vídeo ou '2' para áudio: \n>> ").strip().lower
 
 destination = input("Digite o destino para salvar o arquivo (deixe em branco para o diretório atual): \n>> ") or '.'
 
-# Instanciando a classe
 downloader = BaixarVideo(link, destination)
 
 if option == '1':
