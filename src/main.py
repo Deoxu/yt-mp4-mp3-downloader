@@ -9,7 +9,6 @@ class BaixarVideo:
         self.ffmpeg_path = "C:/ffmpeg/bin"
 
     def download_mp4(self):
-        """Baixar o vídeo em formato MP4"""
         try:
             ydl_opts = {
                 'format': 'bestvideo+bestaudio/best',
