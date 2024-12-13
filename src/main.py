@@ -26,10 +26,9 @@ class BaixarVideo:
 
             print("Vídeo baixado com sucesso!")
         except Exception as e:
-            print(f"Ocorreu um erro ao baixar o vídeo como MP4: {e}")
+            print(f"Ocorreu um erro ao baixar o vídeo: {e}")
 
     def download_mp3(self):
-        """Baixar apenas o áudio em formato MP3"""
         try:
             ydl_opts = {
                 'format': 'bestaudio/best',
