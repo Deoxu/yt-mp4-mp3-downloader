@@ -6,7 +6,10 @@ Estou desenvolvendo essa aplicação para aprender mais sobre python e ajudar al
 
 - Para utilizar a aplicação, é necessário ter o [ffmpeg](https://www.ffmpeg.org/download.html) baixado na raiz do seu HD (C:\). Clique [aqui](https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip) para baixar.
 
-- Para rodar o código da aplicação em sua IDE preferida, será necessário baixar a biblioteca ["yt_dlp" -> pip install yt_dlp]
+- Para rodar o código da aplicação em sua IDE preferida, será necessário baixar a biblioteca 
+1. ["yt_dlp" -> pip install yt_dlp] 
+2. ["requests" -> pip install requests]
+3. ["pillow" -> pip install pillow]
 
 - Após instalar tudo que é necessário, basta inicializar a aplicação.
 
