@@ -22,7 +22,12 @@ Estou desenvolvendo essa aplicação para aprender mais sobre Python e ajudar pe
      ```bash
      pip install pillow
      ```
-
+     
+    - **custom tkinter**  
+     ```bash
+     pip install customtkinter
+     ```
+   
 3. Após instalar todas as dependências necessárias, inicialize a aplicação.
 
 4. **Utilização da aplicação**:
