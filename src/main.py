@@ -138,9 +138,10 @@ class BaixarVideo:
         )
 
         self.link_entry = ctk.CTkEntry(self.sub_frame_1,
-                                       corner_radius=50,
+                                       corner_radius=30,
                                        width=300,
-                                       height=40
+                                       height=40,
+                                       border_color= "#581a76"
         )
 
         self.link_entry.grid(row=0,
@@ -201,7 +202,7 @@ class BaixarVideo:
                                       sticky="w"
         )
 
-        # Linha 1: Botão para selecionar destino e label de destino
+        # Linha 2: Botão para selecionar destino e label de destino
         self.dest_button = ctk.CTkButton(self.sub_frame_3,
                                          text="Selecionar Pasta",
                                          width=110,
