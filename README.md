@@ -8,26 +8,26 @@ Estou desenvolvendo essa aplicação para aprender mais sobre Python e ajudar pe
 
 2. Para rodar o código da aplicação em sua IDE favorita, instale as seguintes bibliotecas:
 
-   - **yt_dlp**  
-     ```bash
-     pip install yt_dlp
-     ```
+- **yt_dlp**  
+  ```bash
+  pip install yt_dlp
+  ```
 
-   - **requests**  
-     ```bash
-     pip install requests
-     ```
+- **requests**  
+  ```bash
+  pip install requests
+  ```
+  
+- **custom tkinter**  
+  ```bash
+  pip install customtkinter
+  ```
 
-   - **pillow**  
-     ```bash
-     pip install pillow
-     ```
-     
-    - **custom tkinter**  
-     ```bash
-     pip install customtkinter
-     ```
-   
+- **pillow**  
+  ```bash
+  pip install pillow
+  ```
+
 3. Após instalar todas as dependências necessárias, inicialize a aplicação.
 
 4. **Utilização da aplicação**:
