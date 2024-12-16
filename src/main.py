@@ -100,12 +100,11 @@ class App:
                     downloaded = d.get('downloaded_bytes', 0)
                     total = d.get('total_bytes', 1)
                     progress = downloaded / total
-                    progress_bar.set(progress)  # Atualiza a barra de progresso
-                    progress_label.configure(text=f"Baixando... {int(progress * 100)}%")  # Atualiza o texto
+                    progress_bar.set(progress)
+                    progress_label.configure(text=f"Baixando... {int(progress * 100)}%")
 
-                if d['status'] == 'finished' and progress_window:
+                elif d['status'] == 'finished':
                     progress_label.configure(text="Download concluído!")
-                    progress_window.after(1000, progress_window.destroy)  # Fecha a janela após 1 segundo
 
             ydl_opts = {
                 'format': 'bestaudio/best',
@@ -118,11 +117,43 @@ class App:
                     }
                 ],
                 'ffmpeg_location': self.ffmpeg_path,
-                'progress_hooks': [progress_hook]  # Adiciona o hook de progresso
+                'progress_hooks': [progress_hook]
             }
 
             with YoutubeDL(ydl_opts) as ydl:
-                ydl.download([self.link])
+                info_dict = ydl.extract_info(self.link, download=True)
+                downloaded_file = os.path.join(
+                    self.destination, f"{info_dict['title']}.mp3"
+                )
+
+            # Atualiza a janela com as informações do arquivo baixado
+            if progress_window:
+                # Remove barra de progresso e exibe informações do arquivo
+                for widget in progress_window.winfo_children():
+                    widget.destroy()
+                    absolute_path = os.path.abspath(downloaded_file)
+                    local_path = os.path.dirname(absolute_path)
+                progress_label = ctk.CTkLabel(
+                    progress_window,
+                    text=f"Download concluído!\n\nArquivo: {os.path.basename(downloaded_file)}\nLocal: {local_path}",
+                    font=("Segoe UI", 14),
+                    justify="left"
+                )
+                progress_label.pack(pady=20)
+
+                close_button = ctk.CTkButton(
+                    progress_window,
+                    text="Fechar",
+                    command=progress_window.destroy,
+                    width=100,
+                    height=40,
+                    corner_radius=10
+                )
+                close_button.pack(pady=10)
+
+            # Aumenta o tamanho da janela
+            progress_window.geometry("800x200")
+
         except Exception as e:
             if progress_window:
                 progress_window.destroy()
