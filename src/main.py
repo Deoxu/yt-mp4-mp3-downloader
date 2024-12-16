@@ -4,15 +4,12 @@ import threading
 import customtkinter
 import requests
 
-
 from yt_dlp import YoutubeDL
 import customtkinter as ctk
 from tkinter import messagebox, font, filedialog
 from PIL import Image
 from io import BytesIO
 from customtkinter import*
-
-
 
 class App:
     def __init__(self, link, destination='.'):
