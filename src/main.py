@@ -1,13 +1,14 @@
 import os
 import asyncio
 import threading
-
 import customtkinter
+import requests
+
+
 from yt_dlp import YoutubeDL
 import customtkinter as ctk
 from tkinter import messagebox, font, filedialog
 from PIL import Image
-import requests
 from io import BytesIO
 from customtkinter import*
 
@@ -19,29 +20,96 @@ class App:
         self.destination = destination
         self.ffmpeg_path = "C:/ffmpeg/bin"  # Verifique se este caminho é válido
 
-    def download_mp4(self):
+    def download_mp4(self, progress_bar=None, progress_label=None, progress_window=None):
         try:
+            def progress_hook(d):
+                # Atualiza o progresso do download
+                if d['status'] == 'downloading' and progress_bar:
+                    downloaded = d.get('downloaded_bytes', 0)
+                    total = d.get('total_bytes', 1)
+                    progress = downloaded / total
+                    progress_bar.set(progress)
+                    progress_label.configure(text=f"Baixando... {int(progress * 100)}%")
+
+                # Indica que o download foi finalizado
+                elif d['status'] == 'finished':
+                    progress_label.configure(text="Download concluído, iniciando conversão...")
+
             ydl_opts = {
-                'format': 'bestvideo+bestaudio',
+                'format': 'bestvideo+bestaudio/best',
                 'outtmpl': os.path.join(self.destination, '%(title)s.%(ext)s'),
-                'postprocessors': [
-                    {
-                        'key': 'FFmpegVideoConvertor',
-                        'preferedformat': 'mp4',
-                    }
-                ],
-                'ffmpeg_location': self.ffmpeg_path
+                'ffmpeg_location': self.ffmpeg_path,
+                'progress_hooks': [progress_hook]
             }
 
             with YoutubeDL(ydl_opts) as ydl:
-                ydl.download([self.link])
+                info_dict = ydl.extract_info(self.link, download=True)
+                downloaded_file = ydl.prepare_filename(info_dict)  # Obtém o caminho do arquivo baixado
 
-            messagebox.showinfo("Sucesso", "Vídeo baixado com sucesso com áudio.")
+            # Verifica se é necessário converter o arquivo
+            if downloaded_file.endswith(".webm"):
+                self.convert_to_mp4(downloaded_file, progress_bar, progress_label)
+
+                # Remove o arquivo original após a conversão
+                if os.path.exists(downloaded_file):
+                    os.remove(downloaded_file)
+
+            if progress_window:
+                progress_label.configure(text="Processo concluído!")
+                progress_window.after(1000, progress_window.destroy)
+
         except Exception as e:
-            messagebox.showerror("Erro", f"Ocorreu um erro ao baixar o vídeo: {e}")
+            if progress_window:
+                progress_window.destroy()
+            messagebox.showerror("Erro", f"Ocorreu um erro ao baixar ou converter o vídeo: {e}")
 
-    def download_mp3(self):
+    def convert_to_mp4(self, input_file, progress_bar=None, progress_label=None):
+        import subprocess
+        import re
+
+        output_file = input_file.replace(".webm", ".mp4")
+        progress_bar.set(0)  # Reinicia o progresso para a conversão
+        progress_label.configure(text="Convertendo vídeo...")
+
+        command = [
+            os.path.join(self.ffmpeg_path, "ffmpeg"), "-y", "-i", input_file,
+            "-c:v", "libx264", "-preset", "fast", "-c:a", "aac", output_file
+        ]
+
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        progress_pattern = re.compile(r"time=(\d+):(\d+):(\d+\.\d+)")
+
+        for line in process.stderr:
+            match = progress_pattern.search(line)
+            if match:
+                hours, minutes, seconds = map(float, match.groups())
+                total_seconds = hours * 3600 + minutes * 60 + seconds
+                progress = min(1, total_seconds / 300)  # Ajuste para estimativa de tempo total
+                progress_bar.set(progress)
+                progress_label.configure(text=f"Convertendo... {int(progress * 100)}%")
+
+        process.wait()
+
+        if process.returncode == 0:
+            progress_label.configure(text="Conversão concluída!")
+        else:
+            progress_label.configure(text="Erro na conversão.")
+            messagebox.showerror("Erro", "Houve um problema durante a conversão do vídeo.")
+
+    def download_mp3(self, progress_bar=None, progress_label=None, progress_window=None):
         try:
+            def progress_hook(d):
+                if d['status'] == 'downloading' and progress_bar:
+                    downloaded = d.get('downloaded_bytes', 0)
+                    total = d.get('total_bytes', 1)
+                    progress = downloaded / total
+                    progress_bar.set(progress)  # Atualiza a barra de progresso
+                    progress_label.configure(text=f"Baixando... {int(progress * 100)}%")  # Atualiza o texto
+
+                if d['status'] == 'finished' and progress_window:
+                    progress_label.configure(text="Download concluído!")
+                    progress_window.after(1000, progress_window.destroy)  # Fecha a janela após 1 segundo
+
             ydl_opts = {
                 'format': 'bestaudio/best',
                 'outtmpl': os.path.join(self.destination, '%(title)s.%(ext)s'),
@@ -52,14 +120,15 @@ class App:
                         'preferredquality': '192',
                     }
                 ],
-                'ffmpeg_location': self.ffmpeg_path
+                'ffmpeg_location': self.ffmpeg_path,
+                'progress_hooks': [progress_hook]  # Adiciona o hook de progresso
             }
 
             with YoutubeDL(ydl_opts) as ydl:
                 ydl.download([self.link])
-
-            messagebox.showinfo("Sucesso", "Áudio baixado com sucesso.")
         except Exception as e:
+            if progress_window:
+                progress_window.destroy()
             messagebox.showerror("Erro", f"Ocorreu um erro ao baixar o áudio como MP3: {e}")
 
     def get_info(self):
@@ -76,6 +145,24 @@ class App:
 
 class BaixarVideo:
 
+    def show_progress_window(self):
+        # Criação de uma nova janela para exibir a barra de progresso
+        self.progress_window = ctk.CTkToplevel(self.root)
+        self.progress_window.title("Progresso do Download")
+        self.progress_window.geometry("400x150")
+        self.progress_window.resizable(False, False)
+
+        # Configurando a janela de progresso para ficar sempre no topo
+        self.progress_window.attributes("-topmost", True)
+
+        # Adicionando a barra de progresso
+        self.progress_label = ctk.CTkLabel(self.progress_window, text="Iniciando download...", font=("Segoe UI", 14))
+        self.progress_label.pack(pady=20)
+
+        self.progress_bar = ctk.CTkProgressBar(self.progress_window, width=300, height=20, corner_radius=10)
+        self.progress_bar.pack(pady=10)
+        self.progress_bar.set(0)
+
     def run_in_thread(self, target, *args):
         threading.Thread(target=target, args=args, daemon=True).start()
 
@@ -84,7 +171,7 @@ class BaixarVideo:
         ctk.set_default_color_theme("blue")
         self.root = root
         self.root.title("Shimmer")
-        self.root.geometry("1200x300")
+        self.root.geometry("930x290")
         icon_path = os.path.join(os.path.dirname(__file__), '..', 'images', 'icon.ico')
         self.root.iconbitmap(icon_path)
         my_font = customtkinter.CTkFont(family="Segoe UI", size=14, weight="bold")
@@ -140,13 +227,12 @@ class BaixarVideo:
 
         # Usando CTkImage para a imagem padrão
         self.default_image = ctk.CTkImage(
-            light_image=Image.open(BytesIO(requests.get("https://i.ibb.co/5Tv5k3k/Cabe-alho.png").content)),
+            light_image=Image.open(BytesIO(requests.get("https://i.ibb.co/xzz03xp/1234.png").content)),
             size=(320, 180)
         )
 
         self.thumbnail_image = ctk.CTkLabel(self.info_frame, image=self.default_image, text="")
         self.thumbnail_image.pack()
-
         self.destination = '.'
 
     def select_destination(self):
@@ -161,8 +247,9 @@ class BaixarVideo:
             messagebox.showwarning("Atenção", "Por favor, insira o link do vídeo.")
             return
 
+        self.show_progress_window()  # Mostra a janela de progresso
         downloader = App(link, self.destination)
-        self.run_in_thread(downloader.download_mp4)
+        self.run_in_thread(downloader.download_mp4, self.progress_bar, self.progress_label, self.progress_window)
 
     def download_mp3(self):
         link = self.link_entry.get().strip()
@@ -170,8 +257,9 @@ class BaixarVideo:
             messagebox.showwarning("Atenção", "Por favor, insira o link do vídeo.")
             return
 
+        self.show_progress_window()  # Mostra a janela de progresso
         downloader = App(link, self.destination)
-        self.run_in_thread(downloader.download_mp3)
+        self.run_in_thread(downloader.download_mp3, self.progress_bar, self.progress_label, self.progress_window)
 
     def show_info(self):
         def _downloadinfo():
