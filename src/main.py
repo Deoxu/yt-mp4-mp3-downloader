@@ -51,9 +51,35 @@ class App:
                 if os.path.exists(downloaded_file):
                     os.remove(downloaded_file)
 
+            # Atualiza a janela com as informações do arquivo baixado
             if progress_window:
-                progress_label.configure(text="Processo concluído!")
-                progress_window.after(1000, progress_window.destroy)
+                # Remove barra de progresso e exibe informações do arquivo
+                for widget in progress_window.winfo_children():
+                    widget.destroy()
+
+                absolute_path = os.path.abspath(downloaded_file.replace(".webm", ".mp4"))
+                local_path = os.path.dirname(absolute_path)
+
+                progress_label = ctk.CTkLabel(
+                    progress_window,
+                    text=f"Download concluído!\n\nArquivo: {os.path.basename(downloaded_file).replace('.webm', '.mp4')}\nLocal: {local_path}",
+                    font=("Segoe UI", 14),
+                    justify="left"
+                )
+                progress_label.pack(pady=20)
+
+                close_button = ctk.CTkButton(
+                    progress_window,
+                    text="Fechar",
+                    command=progress_window.destroy,
+                    width=100,
+                    height=40,
+                    corner_radius=10
+                )
+                close_button.pack(pady=10)
+
+                # Aumenta o tamanho da janela
+                progress_window.geometry("800x200")
 
         except Exception as e:
             if progress_window:
