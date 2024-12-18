@@ -15,7 +15,7 @@ class App:
     def __init__(self, link, destination='.'):
         self.link = link
         self.destination = destination
-        self.ffmpeg_path = "C:/ffmpeg/bin"  # Verifique se este caminho é válido
+        self.ffmpeg_path = "C:\\ffmpeg\\bin"  # Verifique se este caminho é válido
 
     def download_mp4(self, progress_bar=None, progress_label=None, progress_window=None):
         try:
@@ -23,8 +23,13 @@ class App:
                 # Atualiza o progresso do download
                 if d['status'] == 'downloading' and progress_bar:
                     downloaded = d.get('downloaded_bytes', 0)
-                    total = d.get('total_bytes', 1)
-                    progress = downloaded / total
+                    total = d.get('total_bytes', None)
+
+                    if total and total > 0:  # Verifica se 'total_bytes' é válido
+                        progress = downloaded / total
+                    else:
+                        progress = 0  # Define progresso como 0 se não for possível calcular
+
                     progress_bar.set(progress)
                     progress_label.configure(text=f"Baixando... {int(progress * 100)}%")
 
@@ -51,18 +56,15 @@ class App:
                 if os.path.exists(downloaded_file):
                     os.remove(downloaded_file)
 
-            # Atualiza a janela com as informações do arquivo baixado
             if progress_window:
-                # Remove barra de progresso e exibe informações do arquivo
+                # Exibe informações finais do download
                 for widget in progress_window.winfo_children():
                     widget.destroy()
-
                 absolute_path = os.path.abspath(downloaded_file.replace(".webm", ".mp4"))
                 local_path = os.path.dirname(absolute_path)
-
                 progress_label = ctk.CTkLabel(
                     progress_window,
-                    text=f"Download concluído!\n\nArquivo: {os.path.basename(downloaded_file).replace('.webm', '.mp4')}\nLocal: {local_path}",
+                    text=f"Download concluído!\n\nArquivo: {os.path.basename(downloaded_file.replace('.webm', '.mp4'))}\nLocal: {local_path}",
                     font=("Segoe UI", 14),
                     justify="left"
                 )
@@ -74,12 +76,11 @@ class App:
                     command=progress_window.destroy,
                     width=100,
                     height=40,
-                    corner_radius=10
+                    corner_radius=10,
+                    fg_color="#c74066",
+                    font=("Segoe UI", 12, "bold")
                 )
                 close_button.pack(pady=10)
-
-                # Aumenta o tamanho da janela
-                progress_window.geometry("800x200")
 
         except Exception as e:
             if progress_window:
@@ -173,6 +174,7 @@ class App:
                     command=progress_window.destroy,
                     width=100,
                     height=40,
+                    fg_color="#c74066",
                     corner_radius=10
                 )
                 close_button.pack(pady=10)
@@ -191,7 +193,13 @@ class App:
                 info = ydl.extract_info(self.link, download=False)
             return {
                 'title': info.get('title', 'Título não encontrado'),
-                'thumbnail': info.get('thumbnail', '')
+                'thumbnail': info.get('thumbnail', ''),
+
+                'duration': info.get('duration', 0),
+
+                'channel': info.get('channel', 'Canal não encontrado'),
+
+                'description': info.get('description', 'Descrição não encontrada')
             }
         except Exception as e:
             messagebox.showerror("Erro", f"Não foi possível obter informações do vídeo: {e}")
@@ -203,7 +211,7 @@ class BaixarVideo:
         # Criação de uma nova janela para exibir a barra de progresso
         self.progress_window = ctk.CTkToplevel(self.root)
         self.progress_window.title("Progresso do Download")
-        self.progress_window.geometry("400x150")
+        self.progress_window.geometry("400x200")
         self.progress_window.resizable(False, False)
 
         # Configurando a janela de progresso para ficar sempre no topo
@@ -225,7 +233,7 @@ class BaixarVideo:
         ctk.set_default_color_theme("blue")
         self.root = root
         self.root.title("Shimmer")
-        self.root.geometry("930x290")
+        self.root.geometry("1100x500")
         icon_path = os.path.join(os.path.dirname(__file__), '..', 'images', 'icon.ico')
         self.root.iconbitmap(icon_path)
         my_font = customtkinter.CTkFont(family="Segoe UI", size=14, weight="bold")
@@ -245,28 +253,28 @@ class BaixarVideo:
         self.link_label = ctk.CTkLabel(self.left_frame, text="Link do vídeo:", font=my_font)
         self.link_label.grid(row=0, column=0, padx=10, sticky="e")
 
-        self.link_entry = ctk.CTkEntry(self.left_frame, corner_radius=30, width=300, height=40, border_color="#581a76")
+        self.link_entry = ctk.CTkEntry(self.left_frame, corner_radius=30, width=300, height=40, border_color="#c74066")
         self.link_entry.grid(row=0, column=1, columnspan=2, padx=10, sticky="ew")
 
         self.info_button = ctk.CTkButton(self.left_frame, text="Info", width=110, height=40, corner_radius=50,
-                                         fg_color="#581a76", command=self.show_info, font=my_font)
+                                         fg_color="#c74066", command=self.show_info, font=my_font)
         self.info_button.grid(row=0, column=3, padx=10, sticky="w")
 
         # Linha 2: Botões Baixar MP3 e MP4 com espaçamento equilibrado
         self.download_mp3_button = ctk.CTkButton(self.left_frame, text="Baixar MP3", width=150, height=40,
-                                                 corner_radius=50, fg_color="#581a76", command=self.download_mp3,
+                                                 corner_radius=50, fg_color="#c74066", command=self.download_mp3,
                                                  font=my_font)
         self.download_mp3_button.grid(row=1, column=0, columnspan=2, padx=(10, 5), pady=5, sticky="e")
 
         self.download_mp4_button = ctk.CTkButton(self.left_frame, text="Baixar MP4", width=150, height=40,
-                                                 corner_radius=50, fg_color="#581a76", command=self.download_mp4,
+                                                 corner_radius=50, fg_color="#c74066", command=self.download_mp4,
                                                  font=my_font)
         self.download_mp4_button.grid(row=1, column=2, columnspan=2, padx=(5, 10), pady=5, sticky="w")
 
         # Linha 3: Botão Selecionar Pasta e label centralizados
         self.dest_button = ctk.CTkButton(self.left_frame, text="Selecionar Pasta", width=150, height=40,
                                          corner_radius=32,
-                                         fg_color="#581a76", command=self.select_destination, font=my_font)
+                                         fg_color="#c74066", command=self.select_destination, font=my_font)
         self.dest_button.grid(row=2, column=0, columnspan=2, padx=10, pady=5, sticky="e")
 
         self.dest_path = ctk.CTkLabel(self.left_frame, text="Diretório Indefinido", text_color="white")
@@ -286,6 +294,9 @@ class BaixarVideo:
         )
 
         self.thumbnail_image = ctk.CTkLabel(self.info_frame, image=self.default_image, text="")
+        self.info_details = ctk.CTkLabel(self.info_frame, text="", wraplength=350, justify="left",
+                                         font=("Segoe UI", 12))
+        self.info_details.pack(pady=10)
         self.thumbnail_image.pack()
         self.destination = '.'
 
@@ -326,8 +337,14 @@ class BaixarVideo:
             info = downloader.get_info()
             if info:
                 self.thumbnail_label.configure(text=info['title'])
+                details = (f"Duração: {info['duration'] // 60} minutos\n"
 
-                if info['thumbnail']:
+                           f"Canal: {info['channel']}\n\n"
+
+                           f"Descrição:\n{info['description'][:200]}...")
+
+                self.info_details.configure(text=details)
+            if info['thumbnail']:
                     try:
                         response = requests.get(info['thumbnail'], stream=True)
                         if response.status_code == 200:
