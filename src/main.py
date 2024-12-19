@@ -12,12 +12,16 @@ from io import BytesIO
 from customtkinter import*
 
 class App:
+
     def __init__(self, link, destination='.'):
         self.link = link
         self.destination = destination
         self.ffmpeg_path = "C:\\ffmpeg\\bin"  # Verifique se este caminho é válido
+        self.my_font = customtkinter.CTkFont(family="Segoe UI", size=14, weight="bold")
+
 
     def download_mp4(self, progress_bar=None, progress_label=None, progress_window=None):
+        my_font = customtkinter.CTkFont(family="Segoe UI", size=14, weight="bold")
         try:
             def progress_hook(d):
                 # Atualiza o progresso do download
@@ -31,11 +35,11 @@ class App:
                         progress = 0  # Define progresso como 0 se não for possível calcular
 
                     progress_bar.set(progress)
-                    progress_label.configure(text=f"Baixando... {int(progress * 100)}%")
+                    progress_label.configure(text=f"Baixando... {int(progress * 100)}%", font= my_font  )
 
                 # Indica que o download foi finalizado
                 elif d['status'] == 'finished':
-                    progress_label.configure(text="Download concluído, iniciando conversão...")
+                    progress_label.configure(text="Download concluído, iniciando conversão...", font= my_font)
 
             ydl_opts = {
                 'format': 'bestvideo+bestaudio/best',
@@ -65,7 +69,7 @@ class App:
                 progress_label = ctk.CTkLabel(
                     progress_window,
                     text=f"Download concluído!\n\nArquivo: {os.path.basename(downloaded_file.replace('.webm', '.mp4'))}\nLocal: {local_path}",
-                    font=("Segoe UI", 14),
+                    font= my_font,
                     justify="left"
                 )
                 progress_label.pack(pady=20)
@@ -74,11 +78,12 @@ class App:
                     progress_window,
                     text="Fechar",
                     command=progress_window.destroy,
-                    width=100,
+                    width=110,
                     height=40,
-                    corner_radius=10,
+                    corner_radius=50,
                     fg_color="#c74066",
-                    font=("Segoe UI", 12, "bold")
+                    font= my_font,
+                    hover_color="#b03558"
                 )
                 close_button.pack(pady=10)
 
@@ -88,6 +93,7 @@ class App:
             messagebox.showerror("Erro", f"Ocorreu um erro ao baixar ou converter o vídeo: {e}")
 
     def convert_to_mp4(self, input_file, progress_bar=None, progress_label=None):
+        my_font = customtkinter.CTkFont(family="Segoe UI", size=14, weight="bold")
         import subprocess
         import re
 
@@ -110,17 +116,18 @@ class App:
                 total_seconds = hours * 3600 + minutes * 60 + seconds
                 progress = min(1, total_seconds / 300)  # Ajuste para estimativa de tempo total
                 progress_bar.set(progress)
-                progress_label.configure(text=f"Convertendo... {int(progress * 100)}%")
+                progress_label.configure(text=f"Convertendo... {int(progress * 100)}%", font= my_font)
 
         process.wait()
 
         if process.returncode == 0:
-            progress_label.configure(text="Conversão concluída!")
+            progress_label.configure(text="Conversão concluída!", font= my_font)
         else:
-            progress_label.configure(text="Erro na conversão.")
+            progress_label.configure(text="Erro na conversão.", font= my_font)
             messagebox.showerror("Erro", "Houve um problema durante a conversão do vídeo.")
 
     def download_mp3(self, progress_bar=None, progress_label=None, progress_window=None):
+        my_font = customtkinter.CTkFont(family="Segoe UI", size=14, weight="bold")
         try:
             def progress_hook(d):
                 if d['status'] == 'downloading' and progress_bar:
@@ -128,10 +135,10 @@ class App:
                     total = d.get('total_bytes', 1)
                     progress = downloaded / total
                     progress_bar.set(progress)
-                    progress_label.configure(text=f"Baixando... {int(progress * 100)}%")
+                    progress_label.configure(text=f"Baixando... {int(progress * 100)}%", font= my_font)
 
                 elif d['status'] == 'finished':
-                    progress_label.configure(text="Download concluído!")
+                    progress_label.configure(text="Download concluído!", font= my_font)
 
             ydl_opts = {
                 'format': 'bestaudio/best',
@@ -163,7 +170,7 @@ class App:
                 progress_label = ctk.CTkLabel(
                     progress_window,
                     text=f"Download concluído!\n\nArquivo: {os.path.basename(downloaded_file)}\nLocal: {local_path}",
-                    font=("Segoe UI", 14),
+                    font= my_font,
                     justify="left"
                 )
                 progress_label.pack(pady=20)
@@ -172,10 +179,12 @@ class App:
                     progress_window,
                     text="Fechar",
                     command=progress_window.destroy,
-                    width=100,
+                    width=110,
                     height=40,
+                    corner_radius=50,
                     fg_color="#c74066",
-                    corner_radius=10
+                    font=my_font,
+                    hover_color="#b03558"
                 )
                 close_button.pack(pady=10)
 
@@ -185,7 +194,7 @@ class App:
         except Exception as e:
             if progress_window:
                 progress_window.destroy()
-            messagebox.showerror("Erro", f"Ocorreu um erro ao baixar o áudio como MP3: {e}")
+            messagebox.showerror("Erro", f"Ocorreu um erro ao baixar o áudio como MP3: {e}", font= my_font)
 
     def get_info(self):
         try:
@@ -208,6 +217,7 @@ class App:
 class BaixarVideo:
 
     def show_progress_window(self):
+        my_font = customtkinter.CTkFont(family="Segoe UI", size=14, weight="bold")
         # Criação de uma nova janela para exibir a barra de progresso
         self.progress_window = ctk.CTkToplevel(self.root)
         self.progress_window.title("Progresso do Download")
@@ -218,10 +228,10 @@ class BaixarVideo:
         self.progress_window.attributes("-topmost", True)
 
         # Adicionando a barra de progresso
-        self.progress_label = ctk.CTkLabel(self.progress_window, text="Iniciando download...", font=("Segoe UI", 14))
+        self.progress_label = ctk.CTkLabel(self.progress_window, text="Iniciando download...", font= my_font)
         self.progress_label.pack(pady=20)
 
-        self.progress_bar = ctk.CTkProgressBar(self.progress_window, width=300, height=20, corner_radius=10)
+        self.progress_bar = ctk.CTkProgressBar(self.progress_window, width=300, height=30, corner_radius=20, progress_color = "#c74066", fg_color= "#000000")
         self.progress_bar.pack(pady=10)
         self.progress_bar.set(0)
 
@@ -257,27 +267,34 @@ class BaixarVideo:
         self.link_entry.grid(row=0, column=1, columnspan=2, padx=10, sticky="ew")
 
         self.info_button = ctk.CTkButton(self.left_frame, text="Info", width=110, height=40, corner_radius=50,
-                                         fg_color="#c74066", command=self.show_info, font=my_font)
+                                         fg_color="#c74066", command=self.show_info, font=my_font, hover_color="#b03558",)
         self.info_button.grid(row=0, column=3, padx=10, sticky="w")
 
         # Linha 2: Botões Baixar MP3 e MP4 com espaçamento equilibrado
         self.download_mp3_button = ctk.CTkButton(self.left_frame, text="Baixar MP3", width=150, height=40,
                                                  corner_radius=50, fg_color="#c74066", command=self.download_mp3,
-                                                 font=my_font)
+                                                 font=my_font,
+                                                 hover_color="#b03558")
         self.download_mp3_button.grid(row=1, column=0, columnspan=2, padx=(10, 5), pady=5, sticky="e")
 
         self.download_mp4_button = ctk.CTkButton(self.left_frame, text="Baixar MP4", width=150, height=40,
                                                  corner_radius=50, fg_color="#c74066", command=self.download_mp4,
-                                                 font=my_font)
+                                                 font=my_font, hover_color="#b03558",)
         self.download_mp4_button.grid(row=1, column=2, columnspan=2, padx=(5, 10), pady=5, sticky="w")
 
         # Linha 3: Botão Selecionar Pasta e label centralizados
         self.dest_button = ctk.CTkButton(self.left_frame, text="Selecionar Pasta", width=150, height=40,
                                          corner_radius=32,
-                                         fg_color="#c74066", command=self.select_destination, font=my_font)
+                                         fg_color="#c74066",
+                                         command=self.select_destination,
+                                         font=my_font,
+                                         hover_color="#b03558")
+
         self.dest_button.grid(row=2, column=0, columnspan=2, padx=10, pady=5, sticky="e")
 
-        self.dest_path = ctk.CTkLabel(self.left_frame, text="Diretório Indefinido", text_color="white")
+        self.dest_path = ctk.CTkLabel(self.left_frame,
+                                      text="Diretório Indefinido",
+                                      text_color="white")
         self.dest_path.grid(row=2, column=2, columnspan=2, padx=10, pady=5, sticky="w")
 
         # Frame direito para informações do vídeo
@@ -295,7 +312,7 @@ class BaixarVideo:
 
         self.thumbnail_image = ctk.CTkLabel(self.info_frame, image=self.default_image, text="")
         self.info_details = ctk.CTkLabel(self.info_frame, text="", wraplength=350, justify="left",
-                                         font=("Segoe UI", 12))
+                                         font= my_font)
         self.info_details.pack(pady=10)
         self.thumbnail_image.pack()
         self.destination = '.'
@@ -341,7 +358,7 @@ class BaixarVideo:
 
                            f"Canal: {info['channel']}\n\n"
 
-                           f"Descrição:\n{info['description'][:200]}...")
+                           f"Descrição:\n{info['description'][:150]}...")
 
                 self.info_details.configure(text=details)
             if info['thumbnail']:
