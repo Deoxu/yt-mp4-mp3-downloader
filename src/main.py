@@ -70,7 +70,7 @@ class App:
                     progress_window,
                     text=f"Download concluído!\n\nArquivo: {os.path.basename(downloaded_file.replace('.webm', '.mp4'))}\nLocal: {local_path}",
                     font= my_font,
-                    justify="left"
+                    justify="center"
                 )
                 progress_label.pack(pady=20)
 
@@ -221,7 +221,7 @@ class BaixarVideo:
         # Criação de uma nova janela para exibir a barra de progresso
         self.progress_window = ctk.CTkToplevel(self.root)
         self.progress_window.title("Progresso do Download")
-        self.progress_window.geometry("400x200")
+        self.progress_window.geometry("650x200")
         self.progress_window.resizable(False, False)
 
         # Configurando a janela de progresso para ficar sempre no topo
