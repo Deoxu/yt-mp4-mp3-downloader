@@ -17,7 +17,6 @@ class App:
         self.ffmpeg_path = "C:\\ffmpeg\\bin"  # Verifique se este caminho é válido
         self.my_font = customtkinter.CTkFont(family="Segoe UI", size=14, weight="bold")
 
-
     def download_mp4(self, progress_bar=None, progress_label=None, progress_window=None):
         my_font = customtkinter.CTkFont(family="Segoe UI", size=14, weight="bold")
         try:
@@ -33,14 +32,14 @@ class App:
                         progress = 0  # Define progresso como 0 se não for possível calcular
 
                     progress_bar.set(progress)
-                    progress_label.configure(text=f"Baixando... {int(progress * 100)}%", font= my_font  )
+                    progress_label.configure(text=f"Baixando... {int(progress * 100)}%", font=my_font)
 
                 # Indica que o download foi finalizado
                 elif d['status'] == 'finished':
-                    progress_label.configure(text="Download concluído, iniciando conversão...", font= my_font)
+                    progress_label.configure(text="Download concluído, iniciando conversão...", font=my_font)
 
             ydl_opts = {
-                'format': 'bestvideo+bestaudio/best',
+                'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]',
                 'outtmpl': os.path.join(self.destination, '%(title)s.%(ext)s'),
                 'ffmpeg_location': self.ffmpeg_path,
                 'progress_hooks': [progress_hook]
@@ -48,26 +47,37 @@ class App:
 
             with YoutubeDL(ydl_opts) as ydl:
                 info_dict = ydl.extract_info(self.link, download=True)
-                downloaded_file = ydl.prepare_filename(info_dict)  # Obtém o caminho do arquivo baixado
 
-            # Verifica se é necessário converter o arquivo
-            if downloaded_file.endswith(".webm"):
-                self.convert_to_mp4(downloaded_file, progress_bar, progress_label)
+                if isinstance(info_dict, dict) and 'entries' in info_dict:
+                    # É uma playlist
+                    for entry in info_dict['entries']:
+                        downloaded_file = ydl.prepare_filename(entry)
+                        if downloaded_file.endswith(".webm"):
+                            self.convert_to_mp4(downloaded_file, progress_bar, progress_label)
+                            os.remove(downloaded_file)
+                else:
+                    # Download único
+                    downloaded_file = ydl.prepare_filename(info_dict)
+                    if downloaded_file.endswith(".webm"):
+                        self.convert_to_mp4(downloaded_file, progress_bar, progress_label)
+                        os.remove(downloaded_file)
 
-                # Remove o arquivo original após a conversão
-                if os.path.exists(downloaded_file):
-                    os.remove(downloaded_file)
+            final_file = downloaded_file.replace(".webm", ".mp4") if downloaded_file.endswith(
+                ".webm") else downloaded_file
+
+            if not os.path.exists(final_file):
+                raise FileNotFoundError(f"O arquivo final {final_file} não foi gerado.")
 
             if progress_window:
                 # Exibe informações finais do download
                 for widget in progress_window.winfo_children():
                     widget.destroy()
-                absolute_path = os.path.abspath(downloaded_file.replace(".webm", ".mp4"))
+                absolute_path = os.path.abspath(final_file)
                 local_path = os.path.dirname(absolute_path)
                 progress_label = ctk.CTkLabel(
                     progress_window,
-                    text=f"Download concluído!\n\nArquivo: {os.path.basename(downloaded_file.replace('.webm', '.mp4'))}\nLocal: {local_path}",
-                    font= my_font,
+                    text=f"Download concluído!\n\nArquivo: {os.path.basename(final_file)}\nLocal: {local_path}",
+                    font=my_font,
                     justify="center"
                 )
                 progress_label.pack(pady=20)
@@ -80,10 +90,10 @@ class App:
                     height=40,
                     corner_radius=50,
                     fg_color="#c74066",
-                    font= my_font,
+                    font=my_font,
                     hover_color="#b03558",
                     border_color="#000000",
-                    border_width=20
+                    border_width=1
                 )
                 close_button.pack(pady=10)
 
@@ -185,7 +195,8 @@ class App:
                     fg_color="#c74066",
                     font=my_font,
                     hover_color="#b03558",
-                    border_color="#000000"
+                    border_color="#000000",
+                    border_width=1
                 )
                 close_button.pack(pady=10)
 
