@@ -81,7 +81,9 @@ class App:
                     corner_radius=50,
                     fg_color="#c74066",
                     font= my_font,
-                    hover_color="#b03558"
+                    hover_color="#b03558",
+                    border_color="#000000",
+                    border_width=20
                 )
                 close_button.pack(pady=10)
 
@@ -182,7 +184,8 @@ class App:
                     corner_radius=50,
                     fg_color="#c74066",
                     font=my_font,
-                    hover_color="#b03558"
+                    hover_color="#b03558",
+                    border_color="#000000"
                 )
                 close_button.pack(pady=10)
 
@@ -265,19 +268,24 @@ class BaixarVideo:
         self.link_entry.grid(row=0, column=1, columnspan=2, padx=10, sticky="ew")
 
         self.info_button = ctk.CTkButton(self.left_frame, text="Info", width=110, height=40, corner_radius=50,
-                                         fg_color="#c74066", command=self.show_info, font=my_font, hover_color="#b03558",)
+                                         fg_color="#c74066", command=self.show_info, font=my_font, hover_color="#b03558", border_color="#000000",
+                    border_width=2)
         self.info_button.grid(row=0, column=3, padx=10, sticky="w")
 
         # Linha 2: Botões Baixar MP3 e MP4 com espaçamento equilibrado
         self.download_mp3_button = ctk.CTkButton(self.left_frame, text="Baixar MP3", width=150, height=40,
                                                  corner_radius=50, fg_color="#c74066", command=self.download_mp3,
                                                  font=my_font,
-                                                 hover_color="#b03558")
+                                                 hover_color="#b03558",
+                                                 border_color="#000000",
+                                                 border_width=2)
         self.download_mp3_button.grid(row=1, column=0, columnspan=2, padx=(10, 5), pady=5, sticky="e")
 
         self.download_mp4_button = ctk.CTkButton(self.left_frame, text="Baixar MP4", width=150, height=40,
                                                  corner_radius=50, fg_color="#c74066", command=self.download_mp4,
-                                                 font=my_font, hover_color="#b03558",)
+                                                 font=my_font, hover_color="#b03558",
+                                                 border_color="#000000",
+                                                 border_width=2)
         self.download_mp4_button.grid(row=1, column=2, columnspan=2, padx=(5, 10), pady=5, sticky="w")
 
         # Linha 3: Botão Selecionar Pasta e label centralizados
@@ -286,7 +294,10 @@ class BaixarVideo:
                                          fg_color="#c74066",
                                          command=self.select_destination,
                                          font=my_font,
-                                         hover_color="#b03558")
+                                         hover_color="#b03558",
+                                         border_color="#000000",
+                                         border_width=2
+                                         )
 
         self.dest_button.grid(row=2, column=0, columnspan=2, padx=10, pady=5, sticky="e")
 
@@ -304,7 +315,7 @@ class BaixarVideo:
 
         # Usando CTkImage para a imagem padrão
         self.default_image = ctk.CTkImage(
-            light_image=Image.open(BytesIO(requests.get("https://i.ibb.co/xzz03xp/1234.png").content)),
+            light_image=Image.open("../images/infoimg.png"),
             size=(320, 180)
         )
 
