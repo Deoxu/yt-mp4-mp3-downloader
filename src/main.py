@@ -1,5 +1,3 @@
-import os
-import asyncio
 import threading
 import customtkinter
 import requests
@@ -352,13 +350,15 @@ class BaixarVideo:
 
             downloader = App(link)
             info = downloader.get_info()
+            minutes = info['duration'] // 60
+            seconds = info['duration'] % 60
             if info:
                 self.thumbnail_label.configure(text=info['title'])
-                details = (f"Duração: {info['duration'] // 60} minutos\n"
+                details = (f"Duração: {minutes}:{seconds:02}\n"
 
                            f"Canal: {info['channel']}\n\n"
 
-                           f"Descrição:\n{info['description'][:150]}...")
+                           f"Descrição:\n{info['description'][:70]}...")
 
                 self.info_details.configure(text=details)
             if info['thumbnail']:
