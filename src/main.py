@@ -344,7 +344,7 @@ class BaixarVideo:
         self.checkbox.grid(row=0, column=0, padx=(0, 5), sticky="w")
 
         # Asterisco com Tooltip (ao lado da label da checkbox)
-        self.tooltip_label = ctk.CTkLabel(self.checkbox_frame, text="*", text_color="blue", cursor="hand2")
+        self.tooltip_label = ctk.CTkLabel(self.checkbox_frame, text="*", text_color="#c74066", cursor="hand2")
         self.tooltip_label.grid(row=0, column=1, sticky="w", padx=5)
         self.tooltip_label.bind("<Enter>", self.show_tooltip)
         self.tooltip_label.bind("<Leave>", self.hide_tooltip)
@@ -401,10 +401,11 @@ class BaixarVideo:
                 width=200  # Largura fixa para melhor layout
             )
 
-            # Posicionar a tooltip e trazê-la ao topo
+
+            self.tooltip.update_idletasks()
             self.tooltip.place(
-                x=event.x_root - self.left_frame.winfo_rootx() + 20,
-                y=event.y_root - self.left_frame.winfo_rooty() - 40
+                x=event.x_root - self.left_frame.winfo_rootx() - self.tooltip.winfo_width() - 150,
+                y=event.y_root - self.left_frame.winfo_rooty() - 60
             )
             self.tooltip.lift()
 
