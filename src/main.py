@@ -339,7 +339,15 @@ class BaixarVideo:
 
         # Linha 1: Label, entrada do link e botão Info
         self.link_label = ctk.CTkLabel(self.left_frame, text="Link do vídeo:", font=my_font)
-        self.link_label.grid(row=0, column=0, padx=10, sticky="e")
+        self.link_label.grid(row=0, column=0, padx=5, sticky="e")
+
+        self.checkbox_tooltip_label = ctk.CTkLabel(self.left_frame, text="*", text_color="#c74066", cursor="hand2")
+        self.checkbox_tooltip_label.grid(row=0, column=1, sticky="w", padx=0)
+        self.checkbox_tooltip_label.bind("<Enter>", lambda e: self.show_tooltip(e,
+                                                                                "Links suportados:\n- URL de um único vídeo.\n- URL de uma playlist completa.",
+                                                                                x_offset=-120, y_offset=30))
+        self.checkbox_tooltip_label.bind("<Leave>", self.hide_tooltip)
+
 
         self.link_entry = ctk.CTkEntry(self.left_frame, corner_radius=30, width=300, height=40, border_color="#c74066")
         self.link_entry.grid(row=0, column=1, columnspan=2, padx=10, sticky="ew")
@@ -381,8 +389,10 @@ class BaixarVideo:
 
         # Asterisco com Tooltip (ao lado da label da checkbox)
         self.tooltip_label = ctk.CTkLabel(self.checkbox_frame, text="*", text_color="#c74066", cursor="hand2")
-        self.tooltip_label.grid(row=0, column=1, sticky="w", padx=5)
-        self.tooltip_label.bind("<Enter>", self.show_tooltip)
+        self.tooltip_label.grid(row=0, column=1, sticky="w", padx=1)
+        self.tooltip_label.bind("<Enter>", lambda e: self.show_tooltip(e,
+                                                                       "Ativar esta opção irá:\n- Adicionar uma numeração ao nome do arquivo.\n- Remover caracteres especiais automaticamente.",
+                                                                       x_offset=-180, y_offset=30))
         self.tooltip_label.bind("<Leave>", self.hide_tooltip)
 
         # Linha 4: Botão Selecionar Pasta
@@ -417,20 +427,12 @@ class BaixarVideo:
         self.tooltip = None
         self.destination = '.'
 
-
-    def show_tooltip(self, event):
+    def show_tooltip(self, event, text, x_offset=-120, y_offset=25):
         if self.tooltip is None:
-            # Texto formatado para melhor legibilidade
-            tooltip_text = (
-                "Ativar esta opção irá:\n"
-                "- Adicionar uma numeração ao nome do arquivo.\n"
-                "- Remover caracteres especiais automaticamente."
-            )
-
             # Criar a tooltip como um label estilizado
             self.tooltip = ctk.CTkLabel(
                 self.left_frame,
-                text=tooltip_text,
+                text=text,
                 text_color="white",
                 fg_color="#E8B2C1",
                 corner_radius=30,
@@ -439,11 +441,10 @@ class BaixarVideo:
                 height=55,
             )
 
-
             self.tooltip.update_idletasks()
             self.tooltip.place(
-                x=event.x_root - self.left_frame.winfo_rootx() - self.tooltip.winfo_width() - 170,
-                y=event.y_root - self.left_frame.winfo_rooty() + 25
+                x=event.x_root - self.left_frame.winfo_rootx() - self.tooltip.winfo_width() + x_offset,
+                y=event.y_root - self.left_frame.winfo_rooty() + y_offset
             )
             self.tooltip.lift()
 
