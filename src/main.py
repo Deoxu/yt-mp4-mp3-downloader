@@ -284,7 +284,6 @@ class BaixarVideo:
 
     def __init__(self, root):
         ctk.set_appearance_mode("dark")
-        ctk.set_default_color_theme("blue")
         self.root = root
         self.root.title("Shimmer")
         self.root.geometry("1100x440")
@@ -339,7 +338,11 @@ class BaixarVideo:
             self.checkbox_frame,
             text="Formatar nomes automaticamente",
             variable=self.formatar_nomes,
-            command=self.toggle_format_names
+            command=self.toggle_format_names,
+            fg_color="#E8B2C1",
+            hover_color="#c75979",
+            text_color="white",
+            checkmark_color="white"
         )
         self.checkbox.grid(row=0, column=0, padx=(0, 5), sticky="w")
 
@@ -381,6 +384,7 @@ class BaixarVideo:
         self.tooltip = None
         self.destination = '.'
 
+
     def show_tooltip(self, event):
         if self.tooltip is None:
             # Texto formatado para melhor legibilidade
@@ -395,17 +399,18 @@ class BaixarVideo:
                 self.left_frame,
                 text=tooltip_text,
                 text_color="white",
-                fg_color="gray",
-                corner_radius=8,
+                fg_color="#E8B2C1",
+                corner_radius=30,
                 justify="center",
-                width=200  # Largura fixa para melhor layout
+                width=350,
+                height=55,
             )
 
 
             self.tooltip.update_idletasks()
             self.tooltip.place(
-                x=event.x_root - self.left_frame.winfo_rootx() - self.tooltip.winfo_width() - 150,
-                y=event.y_root - self.left_frame.winfo_rooty() - 60
+                x=event.x_root - self.left_frame.winfo_rootx() - self.tooltip.winfo_width() - 170,
+                y=event.y_root - self.left_frame.winfo_rooty() + 25
             )
             self.tooltip.lift()
 
