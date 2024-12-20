@@ -11,9 +11,10 @@ from customtkinter import*
 
 class App:
 
-    def __init__(self, link, destination='.'):
+    def __init__(self, link, destination='.', formatar_nomes=False):
         self.link = link
         self.destination = destination
+        self.formatar_nomes = formatar_nomes
         self.ffmpeg_path = "C:\\ffmpeg\\bin"  # Verifique se este caminho é válido
         self.my_font = customtkinter.CTkFont(family="Segoe UI", size=14, weight="bold")
 
@@ -65,8 +66,16 @@ class App:
             final_file = downloaded_file.replace(".webm", ".mp4") if downloaded_file.endswith(
                 ".webm") else downloaded_file
 
+            # Verifica se o arquivo final existe
             if not os.path.exists(final_file):
                 raise FileNotFoundError(f"O arquivo final {final_file} não foi gerado.")
+
+            # Adiciona lógica para formatar o nome do arquivo
+            if self.formatar_nomes:
+                novo_nome = self.formatar_nome(os.path.splitext(os.path.basename(final_file))[0], ".mp4")
+                novo_caminho = os.path.join(self.destination, novo_nome)
+                os.rename(final_file, novo_caminho)
+                final_file = novo_caminho
 
             if progress_window:
                 # Exibe informações finais do download
@@ -136,6 +145,20 @@ class App:
             progress_label.configure(text="Erro na conversão.", font= my_font)
             messagebox.showerror("Erro", "Houve um problema durante a conversão do vídeo.")
 
+    def formatar_nome(self, nome_original, extensao=".mp3"):
+        """Formata o nome mantendo espaços entre palavras, mas adicionando um traço direto entre o número e o nome."""
+
+        # Remove caracteres especiais, mas mantém espaços e hifens
+        nome_formatado = ''.join(c for c in nome_original if c.isalnum() or c in (' ', '-')).strip()
+
+        # Adicionar numeração com um traço direto entre o número e o nome
+        numero = 1
+        while True:
+            nome_completo = f"{numero:02d}-{nome_formatado}{extensao}"
+            if not os.path.exists(os.path.join(self.destination, nome_completo)):
+                return nome_completo
+            numero += 1
+
     def download_mp3(self, progress_bar=None, progress_label=None, progress_window=None):
         my_font = customtkinter.CTkFont(family="Segoe UI", size=14, weight="bold")
         try:
@@ -166,9 +189,17 @@ class App:
 
             with YoutubeDL(ydl_opts) as ydl:
                 info_dict = ydl.extract_info(self.link, download=True)
+                original_title = info_dict['title']
                 downloaded_file = os.path.join(
-                    self.destination, f"{info_dict['title']}.mp3"
+                    self.destination, f"{original_title}.mp3"
+
                 )
+
+            if self.formatar_nomes:
+                novo_nome = self.formatar_nome(original_title)  # Formata o nome
+                novo_caminho = os.path.join(self.destination, novo_nome)
+                os.rename(downloaded_file, novo_caminho)
+                downloaded_file = novo_caminho
 
             # Atualiza a janela com as informações do arquivo baixado
             if progress_window:
@@ -228,6 +259,7 @@ class App:
 
 class BaixarVideo:
 
+
     def show_progress_window(self):
         my_font = customtkinter.CTkFont(family="Segoe UI", size=14, weight="bold")
         # Criação de uma nova janela para exibir a barra de progresso
@@ -243,7 +275,7 @@ class BaixarVideo:
         self.progress_label = ctk.CTkLabel(self.progress_window, text="Iniciando download...", font= my_font)
         self.progress_label.pack(pady=20)
 
-        self.progress_bar = ctk.CTkProgressBar(self.progress_window, width=300, height=30, corner_radius=20, progress_color = "#c74066", fg_color= "#000000")
+        self.progress_bar = ctk.CTkProgressBar(self.progress_window, width=300, height=30, corner_radius=20, border_color = "#000000", border_width = 3,progress_color = "#c74066", fg_color= "#000000")
         self.progress_bar.pack(pady=10)
         self.progress_bar.set(0)
 
@@ -255,7 +287,9 @@ class BaixarVideo:
         ctk.set_default_color_theme("blue")
         self.root = root
         self.root.title("Shimmer")
-        self.root.geometry("1100x500")
+        self.root.geometry("1100x440")
+        self.destination = '.'
+        self.formatar_nomes = customtkinter.BooleanVar(value=False)
         icon_path = os.path.join(os.path.dirname(__file__), '..', 'images', 'icon.ico')
         self.root.iconbitmap(icon_path)
         my_font = customtkinter.CTkFont(family="Segoe UI", size=14, weight="bold")
@@ -269,7 +303,7 @@ class BaixarVideo:
         self.left_frame = ctk.CTkFrame(root, corner_radius=10)
         self.left_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
         self.left_frame.grid_columnconfigure((0, 1, 2, 3), weight=1)
-        self.left_frame.grid_rowconfigure((0, 1, 2), weight=1)  # Linhas distribuem o espaço vertical
+        self.left_frame.grid_rowconfigure((0, 1, 2, 3), weight=1)
 
         # Linha 1: Label, entrada do link e botão Info
         self.link_label = ctk.CTkLabel(self.left_frame, text="Link do vídeo:", font=my_font)
@@ -279,43 +313,52 @@ class BaixarVideo:
         self.link_entry.grid(row=0, column=1, columnspan=2, padx=10, sticky="ew")
 
         self.info_button = ctk.CTkButton(self.left_frame, text="Info", width=110, height=40, corner_radius=50,
-                                         fg_color="#c74066", command=self.show_info, font=my_font, hover_color="#b03558", border_color="#000000",
-                    border_width=2)
+                                         fg_color="#c74066", command=self.show_info, font=my_font,
+                                         hover_color="#b03558",
+                                         border_color="#000000", border_width=2)
         self.info_button.grid(row=0, column=3, padx=10, sticky="w")
 
-        # Linha 2: Botões Baixar MP3 e MP4 com espaçamento equilibrado
+        # Linha 2: Botões de download
         self.download_mp3_button = ctk.CTkButton(self.left_frame, text="Baixar MP3", width=150, height=40,
                                                  corner_radius=50, fg_color="#c74066", command=self.download_mp3,
-                                                 font=my_font,
-                                                 hover_color="#b03558",
-                                                 border_color="#000000",
+                                                 font=my_font, hover_color="#b03558", border_color="#000000",
                                                  border_width=2)
-        self.download_mp3_button.grid(row=1, column=0, columnspan=2, padx=(10, 5), pady=5, sticky="e")
+        self.download_mp3_button.grid(row=1, column=1, padx=5, pady=5, sticky="e")
 
         self.download_mp4_button = ctk.CTkButton(self.left_frame, text="Baixar MP4", width=150, height=40,
                                                  corner_radius=50, fg_color="#c74066", command=self.download_mp4,
-                                                 font=my_font, hover_color="#b03558",
-                                                 border_color="#000000",
+                                                 font=my_font, hover_color="#b03558", border_color="#000000",
                                                  border_width=2)
-        self.download_mp4_button.grid(row=1, column=2, columnspan=2, padx=(5, 10), pady=5, sticky="w")
+        self.download_mp4_button.grid(row=1, column=2, padx=5, pady=5, sticky="w")
 
-        # Linha 3: Botão Selecionar Pasta e label centralizados
+        # Linha 3: Checkbox com o asterisco ao lado
+        self.checkbox_frame = ctk.CTkFrame(self.left_frame, fg_color="transparent")
+        self.checkbox_frame.grid(row=2, column=1, columnspan=2, pady=(5, 0), sticky="n")
+
+        self.checkbox = customtkinter.CTkCheckBox(
+            self.checkbox_frame,
+            text="Formatar nomes automaticamente",
+            variable=self.formatar_nomes,
+            command=self.toggle_format_names
+        )
+        self.checkbox.grid(row=0, column=0, padx=(0, 5), sticky="w")
+
+        # Asterisco com Tooltip (ao lado da label da checkbox)
+        self.tooltip_label = ctk.CTkLabel(self.checkbox_frame, text="*", text_color="blue", cursor="hand2")
+        self.tooltip_label.grid(row=0, column=1, sticky="w", padx=5)
+        self.tooltip_label.bind("<Enter>", self.show_tooltip)
+        self.tooltip_label.bind("<Leave>", self.hide_tooltip)
+
+        # Linha 4: Botão Selecionar Pasta
         self.dest_button = ctk.CTkButton(self.left_frame, text="Selecionar Pasta", width=150, height=40,
-                                         corner_radius=32,
-                                         fg_color="#c74066",
-                                         command=self.select_destination,
-                                         font=my_font,
-                                         hover_color="#b03558",
-                                         border_color="#000000",
-                                         border_width=2
-                                         )
-
-        self.dest_button.grid(row=2, column=0, columnspan=2, padx=10, pady=5, sticky="e")
+                                         corner_radius=32, fg_color="#c74066", command=self.select_destination,
+                                         font=my_font, hover_color="#b03558", border_color="#000000", border_width=2)
+        self.dest_button.grid(row=3, column=0, columnspan=2, padx=10, pady=5, sticky="e")
 
         self.dest_path = ctk.CTkLabel(self.left_frame,
                                       text="Diretório Indefinido",
                                       text_color="white")
-        self.dest_path.grid(row=2, column=2, columnspan=2, padx=10, pady=5, sticky="w")
+        self.dest_path.grid(row=3, column=2, columnspan=2, padx=10, pady=5, sticky="w")
 
         # Frame direito para informações do vídeo
         self.info_frame = ctk.CTkFrame(root, corner_radius=10)
@@ -332,10 +375,52 @@ class BaixarVideo:
 
         self.thumbnail_image = ctk.CTkLabel(self.info_frame, image=self.default_image, text="")
         self.info_details = ctk.CTkLabel(self.info_frame, text="", wraplength=350, justify="left",
-                                         font= my_font)
+                                         font=my_font)
         self.info_details.pack(pady=10)
         self.thumbnail_image.pack()
+        self.tooltip = None
         self.destination = '.'
+
+    def show_tooltip(self, event):
+        if self.tooltip is None:
+            # Texto formatado para melhor legibilidade
+            tooltip_text = (
+                "Ativar esta opção irá:\n"
+                "- Adicionar uma numeração ao nome do arquivo.\n"
+                "- Remover caracteres especiais automaticamente."
+            )
+
+            # Criar a tooltip como um label estilizado
+            self.tooltip = ctk.CTkLabel(
+                self.left_frame,
+                text=tooltip_text,
+                text_color="white",
+                fg_color="gray",
+                corner_radius=8,
+                justify="center",
+                width=200  # Largura fixa para melhor layout
+            )
+
+            # Posicionar a tooltip e trazê-la ao topo
+            self.tooltip.place(
+                x=event.x_root - self.left_frame.winfo_rootx() + 20,
+                y=event.y_root - self.left_frame.winfo_rooty() - 40
+            )
+            self.tooltip.lift()
+
+    def hide_tooltip(self, event):
+        if self.tooltip is not None:
+            self.tooltip.destroy()
+            self.tooltip = None
+
+    def toggle_format_names(self):
+        if self.formatar_nomes.get():
+            print("Formatação de nomes ativada. Os arquivos serão renomeados ao serem baixados.")
+        else:
+            print("Formatação de nomes desativada. Os arquivos manterão seus nomes originais.")
+
+        # Log adicional para depuração
+        print(f"Estado atual da checkbox: {self.formatar_nomes.get()}")
 
     def select_destination(self):
         folder_selected = filedialog.askdirectory()
@@ -350,7 +435,8 @@ class BaixarVideo:
             return
 
         self.show_progress_window()  # Mostra a janela de progresso
-        downloader = App(link, self.destination)
+        downloader = App(link, self.destination, formatar_nomes=self.formatar_nomes.get())
+        print(f"Formatar nomes: {downloader.formatar_nomes}")
         self.run_in_thread(downloader.download_mp4, self.progress_bar, self.progress_label, self.progress_window)
 
     def download_mp3(self):
@@ -360,7 +446,8 @@ class BaixarVideo:
             return
 
         self.show_progress_window()  # Mostra a janela de progresso
-        downloader = App(link, self.destination)
+        downloader = App(link, self.destination, formatar_nomes=self.formatar_nomes.get())
+        print(f"Formatar nomes: {downloader.formatar_nomes}")  # Confirme o estado aqui
         self.run_in_thread(downloader.download_mp3, self.progress_bar, self.progress_label, self.progress_window)
 
     def show_info(self):
