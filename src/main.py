@@ -56,6 +56,16 @@ class App:
                         if downloaded_file.endswith(".webm"):
                             self.convert_to_mp4(downloaded_file, progress_bar, progress_label)
                             os.remove(downloaded_file)
+
+                        # Formata o nome do arquivo
+                        final_file = downloaded_file.replace(".webm", ".mp4") if downloaded_file.endswith(
+                            ".webm") else downloaded_file
+
+                        if self.formatar_nomes:
+                            novo_nome = self.formatar_nome(os.path.splitext(os.path.basename(final_file))[0], ".mp4")
+                            novo_caminho = os.path.join(self.destination, novo_nome)
+                            os.rename(final_file, novo_caminho)
+                            final_file = novo_caminho
                 else:
                     # Download único
                     downloaded_file = ydl.prepare_filename(info_dict)
@@ -63,19 +73,19 @@ class App:
                         self.convert_to_mp4(downloaded_file, progress_bar, progress_label)
                         os.remove(downloaded_file)
 
-            final_file = downloaded_file.replace(".webm", ".mp4") if downloaded_file.endswith(
-                ".webm") else downloaded_file
+                    # Formata o nome do arquivo
+                    final_file = downloaded_file.replace(".webm", ".mp4") if downloaded_file.endswith(
+                        ".webm") else downloaded_file
+
+                    if self.formatar_nomes:
+                        novo_nome = self.formatar_nome(os.path.splitext(os.path.basename(final_file))[0], ".mp4")
+                        novo_caminho = os.path.join(self.destination, novo_nome)
+                        os.rename(final_file, novo_caminho)
+                        final_file = novo_caminho
 
             # Verifica se o arquivo final existe
             if not os.path.exists(final_file):
                 raise FileNotFoundError(f"O arquivo final {final_file} não foi gerado.")
-
-            # Adiciona lógica para formatar o nome do arquivo
-            if self.formatar_nomes:
-                novo_nome = self.formatar_nome(os.path.splitext(os.path.basename(final_file))[0], ".mp4")
-                novo_caminho = os.path.join(self.destination, novo_nome)
-                os.rename(final_file, novo_caminho)
-                final_file = novo_caminho
 
             if progress_window:
                 # Exibe informações finais do download
@@ -147,72 +157,98 @@ class App:
 
     def formatar_nome(self, nome_original, extensao=".mp3"):
         """Formata o nome mantendo espaços entre palavras, mas adicionando um traço direto entre o número e o nome."""
+        import re
 
         # Remove caracteres especiais, mas mantém espaços e hifens
         nome_formatado = ''.join(c for c in nome_original if c.isalnum() or c in (' ', '-')).strip()
 
-        # Adicionar numeração com um traço direto entre o número e o nome
-        numero = 1
+        # Listar todos os arquivos no diretório de destino
+        arquivos_existentes = os.listdir(self.destination)
+
+        # Identificar a maior numeração existente independentemente da extensão
+        maior_numero = 0
+        padrao = re.compile(r"^(\d{2})-")  # Padrão para encontrar números no início do nome
+
+        for arquivo in arquivos_existentes:
+            match = padrao.match(arquivo)
+            if match:
+                numero = int(match.group(1))
+                maior_numero = max(maior_numero, numero)
+
+        # Incrementar a maior numeração encontrada
+        novo_numero = maior_numero + 1
+
         while True:
-            nome_completo = f"{numero:02d}-{nome_formatado}{extensao}"
+            nome_completo = f"{novo_numero:02d}-{nome_formatado}{extensao}"
             if not os.path.exists(os.path.join(self.destination, nome_completo)):
                 return nome_completo
-            numero += 1
+            novo_numero += 1
 
     def download_mp3(self, progress_bar=None, progress_label=None, progress_window=None):
         my_font = customtkinter.CTkFont(family="Segoe UI", size=14, weight="bold")
         try:
             def progress_hook(d):
+                # Atualiza o progresso do download
                 if d['status'] == 'downloading' and progress_bar:
                     downloaded = d.get('downloaded_bytes', 0)
-                    total = d.get('total_bytes', 1)
-                    progress = downloaded / total
-                    progress_bar.set(progress)
-                    progress_label.configure(text=f"Baixando... {int(progress * 100)}%", font= my_font)
+                    total = d.get('total_bytes', None)
 
+                    if total and total > 0:  # Verifica se 'total_bytes' é válido
+                        progress = downloaded / total
+                    else:
+                        progress = 0  # Define progresso como 0 se não for possível calcular
+
+                    progress_bar.set(progress)
+                    progress_label.configure(text=f"Baixando... {int(progress * 100)}%", font=my_font)
+
+                # Indica que o download foi finalizado
                 elif d['status'] == 'finished':
-                    progress_label.configure(text="Download concluído!", font= my_font)
+                    progress_label.configure(text="Download concluído!", font=my_font)
 
             ydl_opts = {
-                'format': 'bestaudio/best',
+                'format': 'bestaudio/best',  # Obtém o melhor áudio disponível
                 'outtmpl': os.path.join(self.destination, '%(title)s.%(ext)s'),
-                'postprocessors': [
-                    {
-                        'key': 'FFmpegExtractAudio',
-                        'preferredcodec': 'mp3',
-                        'preferredquality': '192',
-                    }
-                ],
+                'postprocessors': [{
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcodec': 'mp3',
+                    'preferredquality': '192',
+                }],
                 'ffmpeg_location': self.ffmpeg_path,
                 'progress_hooks': [progress_hook]
             }
 
             with YoutubeDL(ydl_opts) as ydl:
                 info_dict = ydl.extract_info(self.link, download=True)
-                original_title = info_dict['title']
-                downloaded_file = os.path.join(
-                    self.destination, f"{original_title}.mp3"
 
-                )
+                # Processa os nomes dos arquivos baixados
+                if isinstance(info_dict, dict) and 'entries' in info_dict:
+                    # É uma playlist
+                    for entry in info_dict['entries']:
+                        downloaded_file = ydl.prepare_filename(entry).replace(".webm", ".mp3")
+                        if self.formatar_nomes:
+                            novo_nome = self.formatar_nome(os.path.splitext(os.path.basename(downloaded_file))[0],
+                                                           ".mp3")
+                            novo_caminho = os.path.join(self.destination, novo_nome)
+                            os.rename(downloaded_file, novo_caminho)
+                else:
+                    # Download único
+                    downloaded_file = ydl.prepare_filename(info_dict).replace(".webm", ".mp3")
+                    if self.formatar_nomes:
+                        novo_nome = self.formatar_nome(os.path.splitext(os.path.basename(downloaded_file))[0], ".mp3")
+                        novo_caminho = os.path.join(self.destination, novo_nome)
+                        os.rename(downloaded_file, novo_caminho)
+                        downloaded_file = novo_caminho
 
-            if self.formatar_nomes:
-                novo_nome = self.formatar_nome(original_title)  # Formata o nome
-                novo_caminho = os.path.join(self.destination, novo_nome)
-                os.rename(downloaded_file, novo_caminho)
-                downloaded_file = novo_caminho
-
-            # Atualiza a janela com as informações do arquivo baixado
             if progress_window:
-                # Remove barra de progresso e exibe informações do arquivo
                 for widget in progress_window.winfo_children():
                     widget.destroy()
-                    absolute_path = os.path.abspath(downloaded_file)
-                    local_path = os.path.dirname(absolute_path)
+                absolute_path = os.path.abspath(downloaded_file)
+                local_path = os.path.dirname(absolute_path)
                 progress_label = ctk.CTkLabel(
                     progress_window,
                     text=f"Download concluído!\n\nArquivo: {os.path.basename(downloaded_file)}\nLocal: {local_path}",
-                    font= my_font,
-                    justify="left"
+                    font=my_font,
+                    justify="center"
                 )
                 progress_label.pack(pady=20)
 
@@ -231,13 +267,10 @@ class App:
                 )
                 close_button.pack(pady=10)
 
-            # Aumenta o tamanho da janela
-            progress_window.geometry("800x200")
-
         except Exception as e:
             if progress_window:
                 progress_window.destroy()
-            messagebox.showerror("Erro", f"Ocorreu um erro ao baixar o áudio como MP3: {e}", font= my_font)
+            messagebox.showerror("Erro", f"Ocorreu um erro ao baixar o áudio: {e}")
 
     def get_info(self):
         try:
