@@ -339,8 +339,8 @@ class BaixarVideo:
             text="Formatar nomes automaticamente",
             variable=self.formatar_nomes,
             command=self.toggle_format_names,
-            fg_color="#E8B2C1",
-            hover_color="#c75979",
+            fg_color="#c75979",
+            hover_color="#E8B2C1",
             text_color="white",
             checkmark_color="white"
         )
@@ -424,9 +424,6 @@ class BaixarVideo:
             print("Formatação de nomes ativada. Os arquivos serão renomeados ao serem baixados.")
         else:
             print("Formatação de nomes desativada. Os arquivos manterão seus nomes originais.")
-
-        # Log adicional para depuração
-        print(f"Estado atual da checkbox: {self.formatar_nomes.get()}")
 
     def select_destination(self):
         folder_selected = filedialog.askdirectory()
