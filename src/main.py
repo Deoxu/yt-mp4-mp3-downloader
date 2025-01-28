@@ -1,6 +1,8 @@
 import threading
 import customtkinter
 import requests
+import os
+import sys
 
 from yt_dlp import YoutubeDL
 import customtkinter as ctk
@@ -8,6 +10,13 @@ from tkinter import messagebox, font, filedialog
 from PIL import Image
 from io import BytesIO
 from customtkinter import*
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 class App:
 
@@ -342,24 +351,45 @@ class App:
                 # Processa os nomes dos arquivos baixados
                 if isinstance(info_dict, dict) and 'entries' in info_dict:
                     # É uma playlist
+                    total_videos = len(info_dict['entries'])
+                    downloaded_count = 0
                     for entry in info_dict['entries']:
-                        downloaded_file = ydl.prepare_filename(entry).replace(".webm", ".mp3")
+                        try:
+                            if entry is None or 'title' not in entry:
+                                raise ValueError("Vídeo indisponível na playlist.")
+
+                            downloaded_file = ydl.prepare_filename(entry).replace(".webm", ".mp3")
+                            final_file = downloaded_file
+                            if self.formatar_nomes:
+                                novo_nome = self.formatar_nome(os.path.splitext(os.path.basename(downloaded_file))[0],
+                                                               ".mp3")
+                                novo_caminho = os.path.join(self.destination, novo_nome)
+                                os.rename(downloaded_file, novo_caminho)
+                                final_file = novo_caminho
+
+                            downloaded_count += 1
+                            progress_label.configure(text=f"Baixando... [{downloaded_count}/{total_videos}]", font=my_font)
+                        except ValueError as ve:
+                            print(f"Erro: {ve} - Ignorando entrada.")
+                        except Exception as e:
+                            print(f"Erro ao processar o vídeo da playlist: {e}")
+                else:
+                    try:
+                        if info_dict is None or 'title' not in info_dict or info_dict.get('is_private') or info_dict.get('was_live') or info_dict.get('uploader') is None:
+                            raise ValueError("Vídeo indisponível ou não encontrado.")
+
+                        downloaded_file = ydl.prepare_filename(info_dict).replace(".webm", ".mp3")
                         final_file = downloaded_file
                         if self.formatar_nomes:
-                            novo_nome = self.formatar_nome(os.path.splitext(os.path.basename(downloaded_file))[0],
-                                                           ".mp3")
+                            novo_nome = self.formatar_nome(os.path.splitext(os.path.basename(downloaded_file))[0], ".mp3")
                             novo_caminho = os.path.join(self.destination, novo_nome)
                             os.rename(downloaded_file, novo_caminho)
                             final_file = novo_caminho
-                else:
-                    # Download único
-                    downloaded_file = ydl.prepare_filename(info_dict).replace(".webm", ".mp3")
-                    final_file = downloaded_file
-                    if self.formatar_nomes:
-                        novo_nome = self.formatar_nome(os.path.splitext(os.path.basename(downloaded_file))[0], ".mp3")
-                        novo_caminho = os.path.join(self.destination, novo_nome)
-                        os.rename(downloaded_file, novo_caminho)
-                        final_file = novo_caminho
+                    except ValueError as ve:
+                        messagebox.showerror("Erro", f"{ve}")
+                        return
+                    except Exception as e:
+                        print(f"Erro ao processar o vídeo: {e}")
 
             if progress_window:
                 for widget in progress_window.winfo_children():
@@ -440,11 +470,11 @@ class BaixarVideo:
     def __init__(self, root):
         ctk.set_appearance_mode("dark")
         self.root = root
-        self.root.title("Shimmer")
+        self.root.title("Youtube Downloader")
         self.root.geometry("1100x440")
         self.destination = '.'
         self.formatar_nomes = customtkinter.BooleanVar(value=False)
-        icon_path = os.path.join(os.path.dirname(__file__), '..', 'images', 'icon.ico')
+        icon_path = resource_path(os.path.join('images', 'icon.ico'))
         self.root.iconbitmap(icon_path)
         my_font = customtkinter.CTkFont(family="Segoe UI", size=14, weight="bold")
 
@@ -503,7 +533,7 @@ class BaixarVideo:
             variable=self.formatar_nomes,
             command=self.toggle_format_names,
             fg_color="#c75979",
-            hover_color="#E8B2C1",
+            hover_color="#c74066",
             text_color="white",
             checkmark_color="white"
         )
@@ -542,8 +572,9 @@ class BaixarVideo:
         self.thumbnail_label.pack(pady=10)
 
         # Usando CTkImage para a imagem padrão
+        image_path = resource_path(os.path.join('images', 'infoimg.png'))
         self.default_image = ctk.CTkImage(
-            light_image=Image.open("../images/infoimg.png"),
+            light_image=Image.open(image_path),
             size=(320, 180)
         )
 
@@ -562,7 +593,7 @@ class BaixarVideo:
                 self.left_frame,
                 text=text,
                 text_color="white",
-                fg_color="#E8B2C1",
+                fg_color="#c74066",
                 corner_radius=30,
                 justify="center",
                 width=350,
